@@ -4,5 +4,5 @@
 <%@page import="com.androidodc.eorder.DataBaseHelper"%>
 
 <%
-    out.println(DataBaseHelper.getDiningTables());
+    out.println(DataBaseHelper.getOrderDetail());
 %>

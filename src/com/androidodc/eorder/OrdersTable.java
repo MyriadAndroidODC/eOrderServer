@@ -9,20 +9,22 @@ import org.apache.tomcat.util.json.JSONArray;
 import org.apache.tomcat.util.json.JSONException;
 import org.apache.tomcat.util.json.JSONObject;
 
-public class DiningTable {
-    public static String TABEL_NAME = "dining_tables";
+public class OrdersTable {
+    public static String TABEL_NAME = "orders";
 
     public static final String ID                  = "_id";
-    public static final String NAME                = "name";
+    public static final String SUM                 = "sum";
+    public static final String CREATE_TIME         = "create_time";
     public static final String STATUS              = "status";
-    public static final String CAPACITY            = "capacity";
+    public static final String PAY_TIME            = "pay_time";
 
     public static void create(Connection conn) {
         String sqlStr = "CREATE TABLE IF NOT EXISTS " + TABEL_NAME + " ( " +
                         ID + " INTEGER PRIMARY KEY AUTO_INCREMENT, " +
-                        NAME + " TEXT, " +
-                        CAPACITY + " INTEGER, " +
-                        STATUS + " INTEGER" +
+                        SUM + " FLOAT DEFAULT NULL, " +
+                        CREATE_TIME + " LONG, " +
+                        STATUS + " INTEGER, " +
+                        PAY_TIME + " LONG" +
                         " )";
         PreparedStatement state = null;
         try {
@@ -42,8 +44,18 @@ public class DiningTable {
         }
     }
 
-    public static String getDiningTable(Connection conn) {
+    public static String getOrders(Connection conn, Integer status) {
+        String sqlStr = "SELECT * FROM " + TABEL_NAME +
+                        " WHERE " + STATUS + "=" + status;
+        return queryOrders(conn, sqlStr);
+    }
+
+    public static String getOrders(Connection conn) {
         String sqlStr = "SELECT * FROM " + TABEL_NAME;
+        return queryOrders(conn, sqlStr);
+    }
+
+    private static String queryOrders(Connection conn, String sqlStr) {
         PreparedStatement state = null;
         JSONObject ret = new JSONObject();
         JSONArray jArray = new JSONArray();
@@ -53,9 +65,10 @@ public class DiningTable {
             while (rs.next()) {
                 JSONObject json = new JSONObject();
                 json.put(ID, rs.getInt(1));
-                json.put(NAME, rs.getString(2));
-                json.put(STATUS, rs.getInt(3));
-                json.put(CAPACITY, rs.getInt(4));
+                json.put(SUM, rs.getString(2));
+                json.put(CREATE_TIME, rs.getLong(3));
+                json.put(STATUS, rs.getInt(4));
+                json.put(PAY_TIME, rs.getLong(5));
                 jArray.put(json);
             }
             if (jArray.length() > 0) {
@@ -77,5 +90,34 @@ public class DiningTable {
             e.printStackTrace();
         }
         return ret.toString();
+    }
+
+    public static long saveOrder(Connection conn, double sum) throws SQLException {
+        long createTime = System.currentTimeMillis();
+        String sqlStr = "INSERT INTO " + TABEL_NAME +
+            " VALUES(NULL, " + sum + ", " + createTime + ", 0, NULL)";
+        PreparedStatement state = null;
+        ResultSet rs = null;
+        try {
+            state = conn.prepareStatement(sqlStr);
+            if (state.executeUpdate() > 0) {
+                rs = state.executeQuery("SELECT LAST_INSERT_ID()");
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (state != null) {
+                    state.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return 0;
     }
 }

@@ -20,9 +20,9 @@ public class CategoryTable {
     public static final String SORT_ORDER           = "sort_order";
 
     public static void create(Connection conn) {
-        String sqlStr = "CREATE TABLE " + TABEL_NAME + " ( " +
+        String sqlStr = "CREATE TABLE IF NOT EXISTS " + TABEL_NAME + " ( " +
                         ID + " INTEGER PRIMARY KEY AUTO_INCREMENT, " +
-                        NAME + " text CHARACTER SET gb2312, " +
+                        NAME + " TEXT CHARACTER SET gb2312, " +
                         SORT_ORDER + " INTEGER"
                         + ")";
         PreparedStatement state = null;
@@ -57,6 +57,8 @@ public class CategoryTable {
                 json.put(NAME, rs.getString(2));
                 json.put(SORT_ORDER, rs.getInt(3));
                 jArray.put(json);
+            }
+            if (jArray.length() > 0) {
                 ret.put(TABEL_NAME, jArray);
             }
         } catch (SQLException e) {

@@ -19,7 +19,7 @@ public class DishCategoryTable {
     public static final String CATEGORY_ID              = "category_id";
 
     public static void create(Connection conn) {
-        String sqlStr = "CREATE TABLE " + TABEL_NAME + " ( " +
+        String sqlStr = "CREATE TABLE IF NOT EXISTS " + TABEL_NAME + " ( " +
                         DISH_ID + " INTEGER, " +
                         CATEGORY_ID + " INTEGER" +
                         ")";
@@ -41,7 +41,7 @@ public class DishCategoryTable {
         }
     }
 
-    public static String getDish(Connection conn) {
+    public static String getDishCategory(Connection conn) {
         String sqlStr = "SELECT * FROM " + TABEL_NAME;
         PreparedStatement state = null;
         JSONObject ret = new JSONObject();
@@ -54,6 +54,8 @@ public class DishCategoryTable {
                 json.put(DISH_ID, rs.getInt(1));
                 json.put(CATEGORY_ID, rs.getString(2));
                 jArray.put(json);
+            }
+            if (jArray.length() > 0) {
                 ret.put(TABEL_NAME, jArray);
             }
         } catch (SQLException e) {
