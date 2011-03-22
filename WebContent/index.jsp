@@ -1,4 +1,4 @@
-<%@page language="java" contentType="text/html; charset=ISO-8859-1"%>
+<%@ include file="/WEB-INF/jspf/include.jspf" %>
 
 <%
     StringBuffer url = request.getRequestURL();
@@ -11,9 +11,8 @@
 </head>
 
 <body>
-<h2>It's a server for eOrder<br>
-You can fetch data with following URL:
-</h2>
+<center><h1>eOrder Server<h1></center>
+<h2>Fetch data with following URL:</h2>
 <h4>
 <%= url %>dishes.jsp<br>
 <%= url %>dish_category.jsp<br>
@@ -21,6 +20,10 @@ You can fetch data with following URL:
 <%= url %>categories.jsp<br>
 <%= url %>orders.jsp<br>
 <%= url %>order_detail.jsp<br>
+</h4>
+<h2>Post data with following URL:</h2>
+<h4>
+<%= url %>post_order.jsp<br>
 </h4>
 </body>
 

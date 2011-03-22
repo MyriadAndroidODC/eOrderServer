@@ -1,7 +1,10 @@
 package com.androidodc.eorder;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -12,9 +15,17 @@ import org.apache.tomcat.util.json.JSONArray;
 import org.apache.tomcat.util.json.JSONException;
 import org.apache.tomcat.util.json.JSONObject;
 
+import com.androidodc.eorder.tables.CategoryTable;
+import com.androidodc.eorder.tables.DiningTable;
+import com.androidodc.eorder.tables.DishCategoryTable;
+import com.androidodc.eorder.tables.DishesTable;
+import com.androidodc.eorder.tables.OrderDetailTable;
+import com.androidodc.eorder.tables.OrdersTable;
+
 public class DataBaseHelper {
     private static String SUCCESS = "success";
     private static String ERROR = "error";
+    private static String JNDI_DS_NAME = "java:/eOrderDS";
 
     public synchronized static Connection getConnection() {
         InitialContext initCtx = null;
@@ -22,14 +33,14 @@ public class DataBaseHelper {
         Connection conn = null;
         try {
             initCtx = new InitialContext();
-            ds = (DataSource) initCtx.lookup("java:/eOrderDS");
+            ds = (DataSource)initCtx.lookup(JNDI_DS_NAME);
+            System.out.println("DataSource = " + ds);
             conn = ds.getConnection();
+            System.out.println("Connection = " + conn);
             createTables(conn);
-        } catch (NamingException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+        } catch (NamingException e) {
+            e.printStackTrace();
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return conn;
@@ -43,10 +54,22 @@ public class DataBaseHelper {
         DishCategoryTable.create(conn);
         OrderDetailTable.create(conn);
     }
+
+    public static void createTable(Connection conn, String sqlStr) {
+        PreparedStatement state = null;
+        try {
+            state = conn.prepareStatement(sqlStr);
+            state.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeStatement(state);
+        }
+    }
+
     public static String getCategory() {
         Connection conn = getConnection();
-        String ret = null;
-        ret = CategoryTable.getCategory(conn);
+        String ret = CategoryTable.getCategory(conn);
         closeConnection(conn);
         return ret;
     }
@@ -70,32 +93,28 @@ public class DataBaseHelper {
 
     public static String getOrderDetail() {
         Connection conn = getConnection();
-        String ret = null;
-        ret = OrderDetailTable.getOrderDetail(conn);
+        String ret = OrderDetailTable.getOrderDetail(conn);
         closeConnection(conn);
         return ret;
     }
 
     public static String getDiningTables() {
         Connection conn = getConnection();
-        String ret = null;
-        ret = DiningTable.getDiningTable(conn);
+        String ret = DiningTable.getDiningTable(conn);
         closeConnection(conn);
         return ret;
     }
 
     public static String getDishes() {
         Connection conn = getConnection();
-        String ret = null;
-        ret = DishesTable.getDishes(conn);
+        String ret = DishesTable.getDishes(conn);
         closeConnection(conn);
         return ret;
     }
 
     public static String getDishCategory() {
         Connection conn = getConnection();
-        String ret = null;
-        ret = DishCategoryTable.getDishCategory(conn);
+        String ret = DishCategoryTable.getDishCategory(conn);
         closeConnection(conn);
         return ret;
     }
@@ -104,6 +123,29 @@ public class DataBaseHelper {
         if (conn != null) {
             try {
                 conn.close();
+                conn = null;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void closeStatement(Statement state) {
+        if (state != null) {
+            try {
+                state.close();
+                state = null;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void closeResultSet(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+                rs = null;
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -114,11 +156,14 @@ public class DataBaseHelper {
         int rowCount = 0;
         Connection conn = null;
         try {
-            String jsonString = request.getParameter(OrdersTable.TABEL_NAME);
+            String jsonString = request.getParameter(OrdersTable.TABLE_NAME);
+            if (jsonString == null) {
+                throw new JSONException("Parameter is null!");
+            }
             JSONObject orderData = new JSONObject(jsonString);
 
             double sum = orderData.getDouble(OrdersTable.SUM);
-            JSONArray orderDetails = orderData.getJSONArray(OrderDetailTable.TABEL_NAME);
+            JSONArray orderDetails = orderData.getJSONArray(OrderDetailTable.TABLE_NAME);
 
             conn = getConnection();
             conn.setAutoCommit(false);

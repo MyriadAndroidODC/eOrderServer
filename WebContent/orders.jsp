@@ -1,7 +1,4 @@
-<%@page import="com.androidodc.eorder.DiningTable"%>
-<%@ page language="java" pageEncoding="GB2312"%>
-
-<%@page import="com.androidodc.eorder.DataBaseHelper"%>
+<%@ include file="/WEB-INF/jspf/include.jspf" %>
 
 <%
     out.println(DataBaseHelper.getOrders(request));
